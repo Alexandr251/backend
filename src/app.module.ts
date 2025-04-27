@@ -18,6 +18,10 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AuthModule,
     PrismaModule,
     MailModule,
+    ThrottlerModule.forRoot({
+      ttl: 60,
+      limit: 10,
+    }),
   ],
   controllers: [CsrfController],
 })

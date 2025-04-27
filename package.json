@@ -26,6 +26,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/throttler": "^6.4.0",
     "@types/cookie-parser": "^1.4.8",
     "@types/csurf": "^1.11.5",
     "@types/helmet": "^0.0.48",

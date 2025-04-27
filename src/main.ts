@@ -3,9 +3,12 @@ import { AppModule } from './app.module';
 import { rateLimit } from 'express-rate-limit';
 import { ValidationPipe } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+
+  app.use(helmet());
 
   // CORS настройки
   app.enableCors({

@@ -20,7 +20,9 @@ export class AuthService {
     const user = await this.prisma.user.findUnique({ where: { email } });
     if (!user) throw new UnauthorizedException('Пользователь не найден');
 
-    const isMatch = await bcrypt.compare(pass, user.password_hash);
+    const passwordBuffer = Buffer.from(pass, 'utf-8');
+    const isMatch = await bcrypt.compare(passwordBuffer, user.password_hash);
+    passwordBuffer.fill(0); // Очищаем буфер
     if (!isMatch) throw new UnauthorizedException('Неверный пароль');
 
     if (!user.email_verified) {

@@ -49,17 +49,6 @@ async function bootstrap() {
     }),
   );
 
-  /*
-  // HTTPS редирект (для продакшена)
-  if (configService.get('NODE_ENV') === 'production') {
-    app.use((req, res, next) => {
-      if (req.headers['x-forwarded-proto'] !== 'https') {
-        return res.redirect(301, `https://${req.headers.host}${req.url}`);
-      }
-      next();
-    });
-  }*/
-
   await app.listen(configService.get('PORT') || 443);
   console.log(`Application is running on: ${await app.getUrl()}`);
 }

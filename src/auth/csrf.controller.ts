@@ -1,3 +1,4 @@
+/*
 import { Controller, Get, Req, Res } from '@nestjs/common';
 import { Request, Response } from 'express';
 
@@ -8,3 +9,4 @@ export class CsrfController {
     return res.json({ csrfToken: req.csrfToken() });
   }
 }
+*/

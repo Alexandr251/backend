@@ -2,20 +2,22 @@ import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
 import { rateLimit } from 'express-rate-limit';
 import { ValidationPipe } from '@nestjs/common';
-import { Request, Response, NextFunction } from 'express';
+import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  const configService = app.get(ConfigService);
 
   app.use(helmet());
 
   // CORS настройки
   app.enableCors({
-    origin: process.env.FRONTEND_URL,
+    origin: '*', //configService.get('FRONTEND_URL'),
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'X-CSRF-Token', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    exposedHeaders: ['Authorization'], // Для доступа к токенам на клиенте
   });
 
   // Rate limiting
@@ -28,6 +30,8 @@ async function bootstrap() {
       message: 'Too many requests, please try again later',
     }),
   );
+
+  /*
   app.use((req: Request, res: Response, next: NextFunction) => {
     if (req.path === '/api/csrf') return next();
     if (req.method === 'GET' || req.method === 'OPTIONS') return next();
@@ -35,12 +39,28 @@ async function bootstrap() {
       return res.status(403).json({ message: 'CSRF token missing' });
     }
     next();
-  });
+  });*/
 
   // Глобальная валидация
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true, // Автоматически удаляет лишние поля
+      forbidNonWhitelisted: true, // Бросает ошибку при лишних полях
+    }),
+  );
 
-  await app.listen(process.env.PORT || 443);
+  /*
+  // HTTPS редирект (для продакшена)
+  if (configService.get('NODE_ENV') === 'production') {
+    app.use((req, res, next) => {
+      if (req.headers['x-forwarded-proto'] !== 'https') {
+        return res.redirect(301, `https://${req.headers.host}${req.url}`);
+      }
+      next();
+    });
+  }*/
+
+  await app.listen(configService.get('PORT') || 443);
   console.log(`Application is running on: ${await app.getUrl()}`);
 }
 

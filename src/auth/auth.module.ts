@@ -6,7 +6,9 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { MailModule } from '../mail/mail.module';
-import { CsrfController } from './csrf.controller';
+//import { CsrfController } from './csrf.controller';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { RefreshTokenGuard } from './guards/refresh-token.guard';
 
 @Module({
   imports: [
@@ -15,13 +17,19 @@ import { CsrfController } from './csrf.controller';
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
         secret: configService.get('JWT_SECRET'),
-        signOptions: { expiresIn: '15m' },
+        signOptions: { expiresIn: configService.get('JWT_ACCESS_EXPIRE') },
       }),
       inject: [ConfigService],
     }),
     MailModule,
+    ThrottlerModule.forRoot({
+      throttlers: [{
+        ttl: 60000, // В миллисекундах (60 секунд)
+        limit: 10,
+      }]
+    }),
   ],
-  controllers: [AuthController, CsrfController],
-  providers: [AuthService, JwtStrategy],
+  controllers: [AuthController],
+  providers: [AuthService, JwtStrategy, RefreshTokenGuard],
 })
 export class AuthModule {}

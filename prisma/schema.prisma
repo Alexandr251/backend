@@ -1,0 +1,123 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id               Int                @id @default(autoincrement())
+  email            String             @unique
+  password_hash    String
+  username         String             @db.VarChar(50)
+  avatar_path      String?            @db.VarChar(511)
+  is_online        Boolean            @default(false)
+  email_verified   Boolean            @default(false)
+  verification_token String?
+  created_at       DateTime           @default(now()) @db.Timestamptz
+
+  connection_events ConnectionEvent[]
+  chat_members     ChatMember[]
+  messages        Message[]
+  read_receipts   ReadReceipt[]
+  created_chats   Chat[]              @relation("created_chats")
+
+  @@index([email], name: "idx_users_email")
+  @@index([verification_token], name: "idx_users_verification_token")
+  @@map("users")
+}
+
+model ConnectionEvent {
+  id         Int      @id @default(autoincrement())
+  event_type EventType
+  ip_address String?  @db.VarChar(45)
+  event_time DateTime @default(now()) @db.Timestamptz
+
+  user      User     @relation(fields: [user_id], references: [id])
+  user_id   Int
+
+  @@map("connection_events")
+}
+
+enum EventType {
+  connect
+  disconnect
+}
+
+model Chat {
+  id            Int          @id @default(autoincrement())
+  chat_type     ChatType
+  chat_name     String?      @db.VarChar(100)
+  created_at    DateTime     @default(now()) @db.Timestamptz
+  last_activity DateTime     @default(now()) @db.Timestamptz
+
+  members      ChatMember[]
+  messages     Message[]
+  created_by   User?        @relation("created_chats", fields: [created_by_id], references: [id])
+  created_by_id Int?
+
+  @@map("chats")
+}
+
+enum ChatType {
+  private
+  group
+}
+
+model ChatMember {
+  chat      Chat     @relation(fields: [chat_id], references: [id])
+  chat_id   Int
+  user      User     @relation(fields: [user_id], references: [id])
+  user_id   Int
+  joined_at DateTime @default(now()) @db.Timestamptz
+  is_admin  Boolean  @default(false)
+
+  @@id([chat_id, user_id])
+  @@map("chat_members")
+}
+
+model Message {
+  id         BigInt    @id @default(autoincrement())
+  content    String?
+  is_system  Boolean   @default(false)
+  created_at DateTime  @default(now()) @db.Timestamptz
+
+  chat      Chat       @relation(fields: [chat_id], references: [id])
+  chat_id   Int
+  sender    User?      @relation(fields: [sender_id], references: [id])
+  sender_id Int?
+
+  attachments Attachment[]
+  read_receipts ReadReceipt[]
+
+  @@index([chat_id], name: "idx_messages_chat")
+  @@index([created_at], name: "idx_messages_created")
+  @@map("messages")
+}
+
+model Attachment {
+  id            Int     @id @default(autoincrement())
+  file_path     String  @db.VarChar(511)
+  original_name String  @db.VarChar(255)
+  mime_type     String  @db.VarChar(100)
+  file_size     Int
+
+  message      Message @relation(fields: [message_id], references: [id])
+  message_id   BigInt
+
+  @@index([message_id], name: "idx_attachments_message")
+  @@map("attachments")
+}
+
+model ReadReceipt {
+  message    Message @relation(fields: [message_id], references: [id])
+  message_id BigInt
+  user       User    @relation(fields: [user_id], references: [id])
+  user_id    Int
+  read_at    DateTime @default(now()) @db.Timestamptz
+
+  @@id([message_id, user_id])
+  @@map("read_receipts")
+}

@@ -1,11 +1,13 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { Request } from 'express';
+//import { Request } from 'express';
 
 
 @Injectable()
 export class RefreshTokenGuard implements CanActivate {
+  private readonly logger = new Logger(RefreshTokenGuard.name);
+
   constructor(
     private jwtService: JwtService,
     private configService: ConfigService,
@@ -13,9 +15,10 @@ export class RefreshTokenGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();
-    const token = this.extractTokenFromRequest(request);
+    const token = request.cookies?.refresh_token;
 
     if (!token) {
+      this.logger.warn('Refresh token missing from cookies');
       throw new UnauthorizedException('Refresh token missing');
     }
 
@@ -24,14 +27,11 @@ export class RefreshTokenGuard implements CanActivate {
         secret: this.configService.get('JWT_REFRESH_SECRET'),
       });
       request.user = payload;
-    } catch {
+    } catch (error) {
+      this.logger.error(`Invalid refresh token: ${error.message}`);
       throw new UnauthorizedException('Invalid refresh token');
     }
 
     return true;
-  }
-
-  private extractTokenFromRequest(request: Request): string | null {
-    return request.cookies?.refresh_token || request.body?.refresh_token;
   }
 }

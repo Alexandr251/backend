@@ -31,16 +31,6 @@ async function bootstrap() {
     }),
   );
 
-  /*
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    if (req.path === '/api/csrf') return next();
-    if (req.method === 'GET' || req.method === 'OPTIONS') return next();
-    if (!req.headers['x-xsrf-token']) {
-      return res.status(403).json({ message: 'CSRF token missing' });
-    }
-    next();
-  });*/
-
   // Глобальная валидация
   app.useGlobalPipes(
     new ValidationPipe({

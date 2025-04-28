@@ -4,6 +4,11 @@ import { ExtractJwt, Strategy } from 'passport-jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../prisma/prisma.service';
 
+export interface JwtPayload {
+  sub: number; // userID
+  email: string;
+}
+
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
   constructor(
@@ -20,16 +25,21 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  async validate(payload: JwtPayload) {
     // Проверяем, что пользователь существует и активен
     const user = await this.prisma.user.findUnique({
       where: { id: payload.sub },
       select: { id: true, email: true, is_online: true, email_verified: true }
     });
 
-    if (!user || !user.email_verified) {
-      throw new UnauthorizedException('Пользователь не найден или email не подтверждён');
+    if (!user) {
+      throw new UnauthorizedException('User not found');
     }
+
+    if (!user.email_verified) {
+      throw new UnauthorizedException('Email not verified');
+    }
+
 
     return { userId: user.id, email: user.email };
   }

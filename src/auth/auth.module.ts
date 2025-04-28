@@ -6,7 +6,6 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { MailModule } from '../mail/mail.module';
-//import { CsrfController } from './csrf.controller';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
 

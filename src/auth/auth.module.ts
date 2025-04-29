@@ -8,6 +8,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 import { MailModule } from '../mail/mail.module';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { RefreshTokenGuard } from './guards/refresh-token.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { RefreshTokenGuard } from './guards/refresh-token.guard';
       }),
       inject: [ConfigService],
     }),
+    ConfigModule,
     MailModule,
     ThrottlerModule.forRoot({
       throttlers: [{
@@ -29,6 +31,15 @@ import { RefreshTokenGuard } from './guards/refresh-token.guard';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy, RefreshTokenGuard],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    RefreshTokenGuard,
+    JwtAuthGuard,
+    {
+      provide: 'APP_GUARD',
+      useClass: JwtAuthGuard, // Глобальная регистрация guard'а
+  }],
+  exports: [JwtModule, AuthService, JwtAuthGuard],
 })
 export class AuthModule {}

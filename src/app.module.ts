@@ -6,6 +6,11 @@ import { MailModule } from './mail/mail.module';
 import cookieParser from 'cookie-parser';
 import helmet from 'helmet';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { WebSocketModule } from './websocket/websocket.module';
+import { ChatGateway } from './chat/chat.gateway';
+import { ChatModule } from './chat/chat.module';
+import { APP_GUARD } from '@nestjs/core';
+import { WsJwtGuard } from './websocket/guards/ws-jwt.guard';
 
 @Module({
   imports: [
@@ -16,18 +21,24 @@ import { ThrottlerModule } from '@nestjs/throttler';
     AuthModule,
     PrismaModule,
     MailModule,
+    WebSocketModule,
+    ChatModule,
     ThrottlerModule.forRoot({
-      throttlers: [{
-        ttl: 60000, // В миллисекундах (60 секунд)
-        limit: 10,
-      }]
+      throttlers: [
+        {
+          ttl: 60000, // В миллисекундах (60 секунд)
+          limit: 10,
+        },
+      ],
     }),
   ],
+  providers: [ ChatGateway,
+    { provide: APP_GUARD, useClass: WsJwtGuard }],
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
     consumer
       .apply(helmet(), cookieParser())
-      .forRoutes('*');
+      .forRoutes('*path'); // было: '*'
   }
 }

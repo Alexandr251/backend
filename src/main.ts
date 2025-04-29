@@ -4,9 +4,11 @@ import { rateLimit } from 'express-rate-limit';
 import { ValidationPipe } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import helmet from 'helmet';
+import { IoAdapter } from '@nestjs/platform-socket.io';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.useWebSocketAdapter(new IoAdapter(app));
   const configService = app.get(ConfigService);
 
   app.setGlobalPrefix('api');
